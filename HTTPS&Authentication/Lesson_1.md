@@ -1,5 +1,5 @@
-Lesson 1 --- Why tokens exist 
-==========================================
+ # Lesson 1: Why tokens exist 
+
 
 1\. The problem
 ---------------
@@ -10,7 +10,6 @@ Lesson 1 --- Why tokens exist
 
 -   Without something extra, every click would require your **email + password** again (annoying and unsafe).
 
-* * * * *
 
 2\. First solution: Server-side sessions (stateful)
 ---------------------------------------------------
@@ -28,7 +27,6 @@ Lesson 1 --- Why tokens exist
 
 ➡ Downside: server must **remember every session**. Harder to scale when you have millions of users across many servers.
 
-* * * * *
 
 3\. Second solution: Tokens (stateless)
 ---------------------------------------
@@ -40,8 +38,6 @@ Lesson 1 --- Why tokens exist
 -   On each request, the client sends the token → server just checks the **signature**.
 
 -   No central memory required → easier to scale.
-
-* * * * *
 
 4\. But one token is not enough
 -------------------------------
@@ -58,7 +54,6 @@ If you use just one short-lived token:
 
 -   Bad: user has to log in again and again → terrible UX.
 
-* * * * *
 
 5\. The solution: two tokens
 ----------------------------
@@ -75,7 +70,6 @@ Analogy:
 
 -   **Refresh token** = your **membership card** (kept in your wallet; if the wristband wears off, show the card to get a new one).
 
-* * * * *
 
 6\. What this buys us
 ---------------------
@@ -86,9 +80,8 @@ Analogy:
 
 -   Users don't get logged out constantly, but the system stays safe.
 
-* * * * *
-
-✅ Summary of Lesson 1:
+6\. Summary of Lesson 1:
+---------------------
 
 -   HTTP is stateless → server forgets who you are.
 
