@@ -179,3 +179,85 @@ Authorization: Bearer <jwt_string>`
 
 -   If invalid → rejected with 401.
 
+6\. GO Example
+---------------
+
+```go
+package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
+// b64url encodes bytes using Base64URL **without padding** (what JWTs expect).
+func b64url(b []byte) string {
+	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+// MakeJWT creates an HS256 JWT string.
+// sub: user id, role: app role (example), ttl: token lifetime, secret: HS256 secret key.
+func MakeJWT(sub, role string, ttl time.Duration, secret []byte) (string, error) {
+	// 1) Header (JSON)
+	header := map[string]any{
+		"alg": "HS256",
+		"typ": "JWT",
+	}
+	headerJSON, err := json.Marshal(header)
+	if err != nil {
+		return "", fmt.Errorf("marshal header: %w", err)
+	}
+	headerB64 := b64url(headerJSON)
+
+	// 2) Payload (claims)
+	now := time.Now().Unix()
+	payload := map[string]any{
+		"sub": sub,        // subject (user id)
+		"role": role,      // custom claim (example)
+		"iat":  now,       // issued at
+		"exp":  now + int64(ttl.Seconds()), // expiration time
+		"iss":  "https://auth.example.com", // issuer (example)
+		"aud":  "mma-api", // audience (example)
+	}
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal payload: %w", err)
+	}
+	payloadB64 := b64url(payloadJSON)
+
+	// 3) Signing input = "<header>.<payload>"
+	signingInput := headerB64 + "." + payloadB64
+
+	// 4) Signature = HMAC_SHA256(signingInput, secret), then Base64URL (no padding)
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(signingInput))
+	sig := mac.Sum(nil)
+	sigB64 := b64url(sig)
+
+	// 5) Final token
+	return signingInput + "." + sigB64, nil
+}
+
+func main() {
+	// Example "after login": you verified email+password already.
+	secret := []byte("my_super_secret_key_change_me") // store via env/secret manager in real apps
+
+	token, err := MakeJWT(
+		"550e8400-e29b-41d4-a716-446655440000", // sub (user id)
+		"manager",                               // role
+		15*time.Minute,                          // 15m access token
+		secret,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Access JWT:")
+	fmt.Println(token)
+}
+```
+
